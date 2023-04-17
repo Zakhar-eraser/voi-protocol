@@ -10,6 +10,9 @@ LFLAGS=$(addprefix -L, $(LIBS_DIR))
 
 all: example_module_id
 
+debug: CFLAGS+=-g
+debug: example_module_id
+
 example_module_id: libanti-uav_link.a
 	gcc $(CFLAGS) $(IFLAGS) $(LFLAGS) $(EXECS_SRCS_DIR)example_module_id.c -lanti-uav_link -o example_module_id
 

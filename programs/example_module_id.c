@@ -26,8 +26,6 @@ int main() {
                     .isInfo = 0, .serialNum = SERIAL_NUMBER, .versHardMin = 0,
                     .versHardMaj = 0, .versProgMaj = 1, .versProgMin = 0};
                 reg_req_pack pack = pack_register_request(&req);
-                //FF000001 102 8 
-                printf("%X %X %X", pack.words[0], pack.words[1], pack.words[2]);
                 if (send(sock, pack.words, sizeof(pack), 0) > 0) {
                     reg_conf_pack resp_pack;
                     if (recv(sock, resp_pack.words, sizeof(resp_pack), 0)) {

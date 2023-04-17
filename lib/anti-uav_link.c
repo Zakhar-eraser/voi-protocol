@@ -40,7 +40,7 @@ hdr_pack pack_header(header *hdr) {
     pack.words[1] |= hdr->idxPack << 16;
 
     pack.words[2] = hdr->sizeData & (UINT32_MAX >> 1);
-    pack.words[2] = hdr->isAsku << 31;
+    pack.words[2] |= hdr->isAsku << 31;
 
     pack.words[3] = hdr->typePack & UINT16_MAX;
     uint32_t checksum = int32_byte_sum(pack.words[0]) +
