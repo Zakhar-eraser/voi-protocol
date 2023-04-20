@@ -4,50 +4,31 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t sender;
-    uint32_t sizeData;
-    uint32_t idxPack;
-    uint32_t typePack;
-    uint32_t idxModule;
-    uint32_t yMajor;
-    uint32_t yMinor;
-    uint32_t isAsku;
+    uint32_t sender : 24;
+    uint32_t idxModule : 8;
+    uint32_t yMajor : 8;
+    uint32_t yMinor : 8;
+    uint32_t idxPack : 16;
+    uint32_t sizeData : 31;
+    uint32_t isAsku : 1;
+    uint32_t typePack : 16;
+    uint32_t checkSum : 16;
 } header;
 
 typedef struct {
-    uint32_t serialNum;
-    uint32_t idManuf;
-    uint32_t versHardMaj;
-    uint32_t versHardMin;
-    uint32_t versProgMaj;
-    uint32_t isInfo;
-    uint32_t versProgMin;
-    uint32_t isAsku;
-} register_request;
+    uint32_t idManuf : 8;
+    uint32_t serialNum : 24;
+    uint32_t versHardMaj : 8;
+    uint32_t versHardMin : 8;
+    uint32_t versProgMaj : 7;
+    uint32_t isInfo : 1;
+    uint32_t versProgMin : 7;
+    uint32_t isAsku : 1;
+} reg_request;
 
 typedef struct {
-    uint32_t idxModule;
-    uint32_t errorConnect;
-} register_confirm;
-
-typedef struct {
-    uint32_t words[4];
-} hdr_pack;
-
-typedef struct {
-    uint32_t words[6];
-} reg_req_pack;
-
-typedef struct {
-    uint32_t words[5];
-} reg_conf_pack;
-
-hdr_pack pack_header(header *hdr);
-reg_req_pack pack_register_request(register_request *reg_req);
-
-register_confirm unpack_reg_conf(reg_conf_pack *pack);
-
-void set_module_info(uint32_t sender, uint32_t yMajor, uint32_t yMinor, uint32_t isAsku);
-void set_module_idx(uint32_t idxModule);
+    uint32_t idxModule: 8;
+    uint32_t errorConnect: 8;
+} reg_confirm;
 
 #endif  // _HEADERS_ANTI_UAV_LINK_H_

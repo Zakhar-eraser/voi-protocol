@@ -13,10 +13,10 @@ all: example_module_id
 debug: CFLAGS+=-g
 debug: example_module_id
 
-example_module_id: libanti-uav_link.a
-	gcc $(CFLAGS) $(IFLAGS) $(LFLAGS) $(EXECS_SRCS_DIR)example_module_id.c -lanti-uav_link -o example_module_id
+example_module_id: libanti-uav_tcp_connector.a
+	gcc $(CFLAGS) $(IFLAGS) $(LFLAGS) $(EXECS_SRCS_DIR)example_module_id.c -lanti-uav_tcp_connector -o example_module_id
 
-libanti-uav_link.a: $(LIB_SRCS_DIR)anti-uav_link.o
+libanti-uav_tcp_connector.a: $(LIB_SRCS_DIR)anti-uav_tcp_connector.o
 	ar rc $(BUILD_DIR)$(LIB_SRCS_DIR)$@ $(addprefix $(BUILD_DIR), $<)
 	ranlib $(BUILD_DIR)$(LIB_SRCS_DIR)$@
 
