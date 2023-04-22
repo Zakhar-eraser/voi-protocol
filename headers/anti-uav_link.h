@@ -31,4 +31,16 @@ typedef struct {
     uint32_t errorConnect: 8;
 } reg_confirm;
 
+typedef struct {
+    uint32_t timeRequest1;
+    uint32_t timeRequest2;
+} time_request;
+
+typedef struct {
+    uint32_t timeRequest1;
+    uint32_t timeRequest2;
+    uint32_t timeAnswer1;
+    uint32_t timeAnswer2;
+} time_response;
+
 #endif  // _HEADERS_ANTI_UAV_LINK_H_

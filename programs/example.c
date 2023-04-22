@@ -16,8 +16,13 @@ int main() {
         .isInfo = 0, .serialNum = SERIAL_NUMBER,
         .versHardMaj = 1, .versHardMin = 0,
         .versProgMaj = 1, .versProgMin = 0};
-    if (!voi_register(ADDRESS, PORT, &request)) {
+    if (voi_register(ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
+    } else {
+        printf("module id in VOI: %i", get_common_header().idxModule);
+        voi_start_listen();
+        wait_lost_connection();
     }
+    close_voi_connection();
     return errno;
 }
