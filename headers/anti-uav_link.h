@@ -43,4 +43,13 @@ typedef struct {
     uint32_t timeAnswer2;
 } time_response;
 
+typedef struct {
+    uint32_t serial;
+    float maxRange;
+    float maxV;
+    float maxHeight;
+    uint32_t isGround: 1;
+    uint32_t isAerial: 2;
+} bla_abil;
+
 #endif  // _HEADERS_ANTI_UAV_LINK_H_

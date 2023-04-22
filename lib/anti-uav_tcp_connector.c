@@ -6,24 +6,43 @@
 #include <pthread.h>
 #include <string.h>
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "anti-uav_tcp_connector.h"
 //#define JSMN_HEADER
 //#include "jsmn/jsmn.h"
 
 int send_voi_message(header *hdr, void *pack);
-void set_check_sum(header *header);
+uint16_t get_check_sum(header *header);
 void *sender_thread(void *flag);
 void *receiver_thread(void *flag);
 time_request get_time_request_msg(header *header);
 
 static header common_header = {0};
 static int sockfd = -1;
-static uint16_t idxPack = 0;
 static pthread_t sender_id, receiver_id;
 static uint8_t stop;
+static pthread_mutex_t mutex;
+
+int send_nsu_abilities(header *hdr, uint8_t maxNumBLA, bla_abil *abil) {
+    int out = 0;
+    hdr->
+    hdr->checkSum = get_check_sum(hdr);
+    struct iovec msg_iov[2] = {{.iov_base = hdr, .iov_len = 16},
+        {.iov_base = pack, .iov_len = hdr->sizeData}};
+    struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
+    pthread_mutex_lock(&mutex);
+        if (sendmsg(sockfd, &msg, 0) == 16 + hdr->sizeData) {
+            hdr->idxPack++;
+            out = 1;
+        }
+    pthread_mutex_unlock(&mutex);
+    return out;
+}
 
 void voi_start_listen() {
     stop = 0;
+    pthread_mutex_init(&mutex, NULL);
     pthread_create(&sender_id, NULL, sender_thread, &stop);
     pthread_create(&receiver_id, NULL, receiver_thread, &stop);
 }
@@ -40,8 +59,13 @@ void *sender_thread(void *flag) {
 
 void *receiver_thread(void *flag) {
     uint8_t *stop_flag = (uint8_t *)flag;
+    header hdr;
     while (!(*stop_flag)) {
-        sleep(1);
+        if (recv(sockfd, &hdr, sizeof(header), 0) == sizeof(header) &&
+            hdr.checkSum == get_check_sum(&hdr)) {
+            printf("Message type: 0x%X\n", hdr.typePack);
+            sleep(1);
+        }
     }
     pthread_exit(NULL);
 }
@@ -62,6 +86,7 @@ void voi_stop_listen() {
 void wait_lost_connection() {
     pthread_join(sender_id, NULL);
     pthread_join(receiver_id, NULL);
+    pthread_mutex_destroy(&mutex);
 }
 
 int voi_register(char *ipv6_address, int port, reg_request *req) {
@@ -73,7 +98,6 @@ int voi_register(char *ipv6_address, int port, reg_request *req) {
             if (!connect(sockfd, (struct sockaddr *)&addr, sizeof(addr))) {
                 common_header.idxModule = 0xFF;
                 common_header.typePack = 0x1;
-                common_header.idxPack = idxPack;
                 common_header.sizeData = sizeof(reg_request);
                 if (send_voi_message(&common_header, req)) {
                     header hdr;
@@ -93,19 +117,21 @@ int voi_register(char *ipv6_address, int port, reg_request *req) {
 
 int send_voi_message(header *hdr, void *pack) {
     int out = 0;
-    set_check_sum(hdr);
+    hdr->checkSum = get_check_sum(hdr);
     struct iovec msg_iov[2] = {{.iov_base = hdr, .iov_len = 16},
         {.iov_base = pack, .iov_len = hdr->sizeData}};
     struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
-    if (sendmsg(sockfd, &msg, 0) == 16 + hdr->sizeData) {
-        idxPack++;
-        out = 1;
-    }
+    pthread_mutex_lock(&mutex);
+        if (sendmsg(sockfd, &msg, 0) == 16 + hdr->sizeData) {
+            hdr->idxPack++;
+            out = 1;
+        }
+    pthread_mutex_unlock(&mutex);
     return out;
 }
 
-void set_check_sum(header *header) {
-    header->checkSum = header->idxModule + header->yMajor +
+uint16_t get_check_sum(header *header) {
+    return header->idxModule + header->yMajor +
         header->yMinor + header->isAsku +
         (uint8_t)(header->idxPack) + (uint8_t)(header->idxPack >> 8) +
         (uint8_t)(header->typePack) + (uint8_t)(header->typePack >> 8) +

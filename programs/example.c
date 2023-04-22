@@ -19,7 +19,7 @@ int main() {
     if (voi_register(ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
     } else {
-        printf("module id in VOI: %i", get_common_header().idxModule);
+        printf("module id in VOI: %i\n", get_common_header().idxModule);
         voi_start_listen();
         wait_lost_connection();
     }

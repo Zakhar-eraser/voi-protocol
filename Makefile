@@ -16,7 +16,7 @@ LIBS=-lpthread -lanti-uav_tcp_connector
 all: example.out
 
 debug: CFLAGS+=-g
-debug: example_module_id
+debug: example.out
 
 example.out: libanti-uav_tcp_connector.a
 	gcc $(CFLAGS) $(IFLAGS) $(LFLAGS) $(EXECS_SRCS_DIR)example.c $(LIBS) -o $@
