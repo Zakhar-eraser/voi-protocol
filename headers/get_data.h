@@ -2,8 +2,8 @@
 #include <chrono> 
 #include <thread>
 
-#include "mavlink.h"
-#include "ardupilotmega.h"
+#include "mavlink/common/mavlink.h"
+#include "mavlink/ardupilotmega/ardupilotmega.h"
 
 #include <stdio.h>
 #include <errno.h>

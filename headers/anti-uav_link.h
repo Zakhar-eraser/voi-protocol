@@ -80,6 +80,15 @@ typedef struct {
 
 typedef struct {
     uint32_t serial;
+    uint8_t cmdBLA;
+    uint8_t cmdBCH;
+    float latitudeDegCeil;
+    float longitudeDegCeil;
+    float heightCeil;
+} control_cmd;
+
+typedef struct {
+    uint32_t serial;
     uint32_t cmdBLA : 8;
     uint32_t cmdBCH : 8;
     uint32_t typeCoord : 1;
@@ -96,7 +105,7 @@ typedef struct {
     float aX;
     float aY;
     float aZ;
-} control_cmd;
+} ext_control_cmd;
 
 typedef struct {
     uint32_t serial;

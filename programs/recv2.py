@@ -18,8 +18,8 @@ while True:
     msg = the_connection.recv_match()
     if not msg:
         continue
-     else:
-         print(msg)
+    else:
+        print(msg)
     #if msg.get_type() not in exclude_mass:
     #    print("Got message %s" % msg.get_type())
     #    print(msg)

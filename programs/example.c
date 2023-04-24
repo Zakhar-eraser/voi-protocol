@@ -22,14 +22,17 @@ int main() {
         .versHardMaj = 1, .versHardMin = 0,
         .versProgMaj = 1, .versProgMin = 0};
     bla_abil abil = {.serial = 12345, .isAerial = 1, .maxHeight = 50, .maxRange = 1, .maxV = 20};
+    bla_state state = {.serial = 12345, .typeBLA = 1, .typeBCH = 2, .stateBLA = 1, .stateBCH = 1, .FreqLinkHz = 1, .SNR_dB = 5};
     set_time_response_callback((void (*)(header *, time_response *))packet_callback);
-    set_control_cmd_callback((void (*)(header *, control_cmd *))packet_callback);
+    set_ext_control_cmd_callback((void (*)(header *, ext_control_cmd *))packet_callback);
     set_coord_cor_cmd_callback((void (*)(header *, coord_cor_cmd *))packet_callback);
     set_mismatch_cmd_callback((void (*)(header *, mismatch_cmd *))packet_callback);
+    set_control_cmd_callback((void (*)(header *, ext_control_cmd *))packet_callback);
     if (voi_register(ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
     } else {
         send_nsu_abilities(1, &abil);
+        send_bla_state(&state);
         voi_start_listen();
         wait_lost_connection();
     }

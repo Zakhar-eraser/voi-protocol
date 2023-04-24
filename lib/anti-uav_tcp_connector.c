@@ -20,8 +20,10 @@ int send_time_request();
 void ignore_message(header *hdr, void *pack);
 static void (*time_response_handler)(header *, time_response *) =
     (void (*)(header *, time_response *))ignore_message;
-static void (*control_cmd_handler)(header *, control_cmd *) =
-    (void (*)(header *, control_cmd *))ignore_message;
+static void (*control_cmd_handler)(header *, ext_control_cmd *) =
+    (void (*)(header *, ext_control_cmd *))ignore_message;
+static void (*ext_control_cmd_handler)(header *, ext_control_cmd *) =
+    (void (*)(header *, ext_control_cmd *))ignore_message;
 static void (*coord_cor_cmd_handler)(header *, coord_cor_cmd *) =
     (void (*)(header *, coord_cor_cmd *))ignore_message;
 static void (*mismatch_cmd_handler)(header *, mismatch_cmd *) =
@@ -86,10 +88,14 @@ void *receiver_thread(void *flag) {
                     if (recv(sockfd, &resp, hdr.sizeData, 0))
                         time_response_handler(&hdr, &resp);
                     break;
-                case 0x5A2:
+                case 0x5A1:
                     control_cmd control_msg;
                     if (recv(sockfd, &control_msg, hdr.sizeData, 0))
                         control_cmd_handler(&hdr, &control_msg);
+                case 0x5A2:
+                    ext_control_cmd ext_control_msg;
+                    if (recv(sockfd, &ext_control_msg, hdr.sizeData, 0))
+                        ext_control_cmd_handler(&hdr, &ext_control_msg);
                     break;
                 case 0x5A3:
                     coord_cor_cmd coord_cor_msg;
@@ -213,6 +219,10 @@ void set_time_response_callback(void (*callback)(header *, time_response *)) {
 
 void set_control_cmd_callback(void (*callback)(header *, control_cmd *)) {
     control_cmd_handler = callback;
+}
+
+void set_ext_control_cmd_callback(void (*callback)(header *, ext_control_cmd *)) {
+    ext_control_cmd_handler = callback;
 }
 
 void set_coord_cor_cmd_callback(void (*callback)(header *, coord_cor_cmd *)) {
