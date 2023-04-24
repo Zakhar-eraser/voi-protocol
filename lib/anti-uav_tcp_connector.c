@@ -20,8 +20,8 @@ int send_time_request();
 void ignore_message(header *hdr, void *pack);
 static void (*time_response_handler)(header *, time_response *) =
     (void (*)(header *, time_response *))ignore_message;
-static void (*control_cmd_handler)(header *, ext_control_cmd *) =
-    (void (*)(header *, ext_control_cmd *))ignore_message;
+static void (*control_cmd_handler)(header *, control_cmd *) =
+    (void (*)(header *, control_cmd *))ignore_message;
 static void (*ext_control_cmd_handler)(header *, ext_control_cmd *) =
     (void (*)(header *, ext_control_cmd *))ignore_message;
 static void (*coord_cor_cmd_handler)(header *, coord_cor_cmd *) =
@@ -92,6 +92,7 @@ void *receiver_thread(void *flag) {
                     control_cmd control_msg;
                     if (recv(sockfd, &control_msg, hdr.sizeData, 0))
                         control_cmd_handler(&hdr, &control_msg);
+                    break;
                 case 0x5A2:
                     ext_control_cmd ext_control_msg;
                     if (recv(sockfd, &ext_control_msg, hdr.sizeData, 0))

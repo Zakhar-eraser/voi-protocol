@@ -27,7 +27,7 @@ int main() {
     set_ext_control_cmd_callback((void (*)(header *, ext_control_cmd *))packet_callback);
     set_coord_cor_cmd_callback((void (*)(header *, coord_cor_cmd *))packet_callback);
     set_mismatch_cmd_callback((void (*)(header *, mismatch_cmd *))packet_callback);
-    set_control_cmd_callback((void (*)(header *, ext_control_cmd *))packet_callback);
+    set_control_cmd_callback((void (*)(header *, control_cmd *))packet_callback);
     if (voi_register(ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
     } else {
