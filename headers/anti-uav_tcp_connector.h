@@ -4,9 +4,15 @@
 
 void set_header_info(uint32_t sender, uint8_t yMajor,
         uint8_t yMinor, uint8_t isAsku);
-int send_nsu_abilities(header *hdr, uint8_t maxNumBLA, bla_abil *abil);
+void set_time_response_callback(void (*callback)(header *, time_response *));
+void set_control_cmd_callback(void (*callback)(header *, control_cmd *));
+void set_coord_cor_cmd_callback(void (*callback)(header *, coord_cor_cmd *));
+void set_mismatch_cmd_callback(void (*callback)(header *, mismatch_cmd *));
+void set_unknown_message_handler(void (*callback)(header *, uint32_t *));
 
+int send_nsu_abilities(uint8_t maxNumBLA, bla_abil *abil);
 int voi_register(char *ipv6_address, int port, reg_request *req);
+int send_bla_state(bla_state *state);
 
 void voi_start_listen();
 void voi_stop_listen();

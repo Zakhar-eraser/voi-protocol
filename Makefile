@@ -5,7 +5,6 @@ LIBS_DIR=$(BUILD_DIR)$(LIB_SRCS_DIR)
 EXECS_SRCS_DIR=programs/
 
 LIB_TARGETS+=anti-uav_tcp_connector
-LIB_TARGETS+=voi_msgs_handler
 ##################      Do not change below       #############################
 LIB_OBJ=$(addprefix $(LIB_SRCS_DIR), $(LIB_TARGETS:=.o))
 CFLAGS=-Wall -Werror -Wextra
