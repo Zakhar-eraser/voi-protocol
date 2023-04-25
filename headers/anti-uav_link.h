@@ -50,7 +50,7 @@ typedef struct {
     float maxHeight;
     uint32_t isGround : 1;
     uint32_t isAerial : 2;
-} bla_abil;
+} bla_abil; //0xA21
 
 typedef struct {
     uint32_t serial;
@@ -76,7 +76,7 @@ typedef struct {
     float V_Vx;
     float Course_Vy;
     float Vh_Vz;
-} bla_state;
+} bla_state; //0xA23
 
 typedef struct {
     uint32_t serial;

@@ -2,8 +2,14 @@
 
 
 int trigger = 0;
+int triggerListening = 0;
+int triggerMessaging = 0;
 
 Packet updatePacket = {0};
+State currentState = {0};
+State outerState = {0};
+
+std::mutex mtx;
 
 class Timer
 {
@@ -12,7 +18,7 @@ public:
 	void update(T& t, void (GetSock::*f) (), std::chrono::milliseconds Tend)
 	{
 		std::chrono::steady_clock::time_point tend = std::chrono::steady_clock::now() + Tend;
-		while (true)
+		while (triggerListening < 1)
 		{
 			if (std::chrono::steady_clock::now() > tend)
 			{
@@ -38,7 +44,7 @@ public:
 	void updateMessaging(T& t, int (GetSock::*f) (), std::chrono::milliseconds Tend)
 	{
 		std::chrono::steady_clock::time_point tend = std::chrono::steady_clock::now() + Tend;
-		while (trigger < 1)
+		while (triggerMessaging < 1)
 		{
 			if (std::chrono::steady_clock::now() > tend)
 			{
@@ -115,7 +121,7 @@ startListening_()
 	{
 		mavlink_message_t msg;
 		mavlink_status_t status;
-		mavlink_servo_output_raw_t servo;
+		mavlink_local_position_ned_t ned;
 		mavlink_heartbeat_t heartbeat;
 			for (i = 0; i < recsize; ++i)
 			{
@@ -123,23 +129,30 @@ startListening_()
 				if (mavlink_parse_char(MAVLINK_COMM_0, buf[i], &msg, &status))
 				{
 			switch(msg.msgid) {
-				case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW: // ID for GLOBAL_POSITION_INT
+				case MAVLINK_MSG_ID_LOCAL_POSITION_NED: // ID for GLOBAL_POSITION_INT
 					{
-				// printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
-				// 	mavlink_msg_servo_output_raw_decode(&msg, &servo);
-				// printf("data: %d", servo.servo1_raw);
-				testPacket.data.mavVersion++;
+					// printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
+					mavlink_msg_local_position_ned_decode(&msg, &ned);
+					// printf("data: %d", ned.x);
+					mtx.lock();
+					currentState.x = ned.x;
+					currentState.y = ned.y;
+					currentState.z = ned.z;
+					currentState.vx = ned.vx;
+					currentState.vy = ned.vy;
+					currentState.vz = ned.vz;
+					mtx.unlock();
 			
 				}
 					break;
-			case MAVLINK_MSG_ID_HEARTBEAT: // ID for GLOBAL_POSITION_INT
-					{
-				// printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
-				// 	mavlink_msg_heartbeat_decode(&msg, &heartbeat);
-				// printf("data: %d", heartbeat.autopilot);
+			// case MAVLINK_MSG_ID_HEARTBEAT: // ID for GLOBAL_POSITION_INT
+			// 		{
+			// 	// printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
+			// 	// 	mavlink_msg_heartbeat_decode(&msg, &heartbeat);
+			// 	// printf("data: %d", heartbeat.autopilot);
 			
-				}
-					break;
+			// 	}
+			// 		break;
 				}
 			}   
 		}
@@ -176,6 +189,14 @@ int GetSock::c()
 	// 	x++;
 	// };
 	// return qwert;
+}
+
+State
+GetSock::
+getCurrentState()
+{
+	outerState = currentState;
+	return outerState;
 }
 
 int

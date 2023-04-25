@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono> 
 #include <thread>
+#include <mutex>
 
 #include "mavlink/common/mavlink.h"
 #include "mavlink/ardupilotmega/ardupilotmega.h"
@@ -33,6 +34,15 @@
 //     int freq : 32;
 
 // };
+struct State
+{
+    float x;
+    float y;
+    float z;
+    float vx;
+    float vy;
+    float vz;
+};
 
 
 struct Data 
@@ -88,6 +98,7 @@ public:
     int c();
     
     int startListening(GetSock sock, uint32_t hz);
+    State getCurrentState();
     int startMessaging(Packet packet, GetSock sock, uint32_t hz);
     int updateMessaging(Packet packet);
     int sendMessage();

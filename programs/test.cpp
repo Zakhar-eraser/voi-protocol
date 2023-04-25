@@ -30,9 +30,14 @@ int main()
 
     s.updateMessaging(msg1);
 
+    State state;
+
     for (;;)
     {
-        continue;
+        state = s.getCurrentState();
+        std::cout << state.x << std::endl;
+        sleep(1);
+        // continue;
     }
 
 }
