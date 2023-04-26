@@ -168,29 +168,6 @@ void ha()
   	std::cout << "ha" << std::endl;
 }
 
-int GetSock::a(int x)
-{
-	sleep(5);
-	trigger = 1;
-}
-
-
-int GetSock::b(int x)
-{
-    std::cout << x << std::endl;
-    sleep(2);
-}
-
-int GetSock::c()
-{
-	testPacket.data.mavVersion = 18;
-	// for (;;)
-	// {
-	// 	x++;
-	// };
-	// return qwert;
-}
-
 State
 GetSock::
 getCurrentState()

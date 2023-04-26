@@ -71,8 +71,6 @@ union Packet
 
 extern int qwert;
 
-extern Packet testPacket;
-
 class GetSock
 {
 

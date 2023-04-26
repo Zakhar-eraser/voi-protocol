@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
+#include <chrono>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +15,10 @@
 int send_voi_message(struct msghdr *msg);
 uint16_t get_check_sum(header *header);
 void *ping_thread(void *flag);
+void *status_thread(void *flag);
 void *receiver_thread(void *flag);
 int send_time_request();
+uint64_t mstime();
 
 void ignore_message(header *hdr, void *pack);
 static void (*time_response_handler)(header *, time_response *) =
@@ -32,16 +35,28 @@ static void (*unknown_message_handler)(header *, uint32_t *) =
     (void (*)(header *, uint32_t *))ignore_message;
 
 static header common_header = {0};
+static module_status status = {0};
 static int sockfd = -1;
-static pthread_t ping_id, receiver_id;
+static pthread_t ping_id, status_id, receiver_id;
 static uint8_t stop;
 static pthread_mutex_t send_mutex;
+
+int send_module_status(module_status *status) {
+    header hdr = common_header;
+    hdr.typePack = 0x24;
+    hdr.sizeData = sizeof(module_status);
+    *(uint64_t *)&(status->time1) = mstime();
+    struct iovec msg_iov[2] = {{.iov_base = &hdr, .iov_len = sizeof(header)},
+        {.iov_base = status, .iov_len = sizeof(module_status)}};
+    struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
+    return send_voi_message(&msg);    
+}
 
 int send_bla_state(bla_state *state) {
     header hdr = common_header;
     hdr.typePack = 0xA23;
     hdr.sizeData = sizeof(bla_state);
-    *(uint64_t *)&(state->timeCoordBLA1) = time(NULL);
+    *(uint64_t *)&(state->timeCoordBLA1) = mstime();
     struct iovec msg_iov[2] = {{.iov_base = &hdr, .iov_len = 16},
         {.iov_base = state, .iov_len = sizeof(bla_state)}};
     struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
@@ -65,6 +80,7 @@ void voi_start_listen() {
     pthread_mutex_init(&send_mutex, NULL);
     pthread_create(&ping_id, NULL, ping_thread, &stop);
     pthread_create(&receiver_id, NULL, receiver_thread, &stop);
+    pthread_create(&status_id, NULL, status_thread, &stop);
 }
 
 void *ping_thread(void *flag) {
@@ -76,16 +92,26 @@ void *ping_thread(void *flag) {
     pthread_exit(NULL);
 }
 
+void *status_thread(void *flag) {
+    uint8_t *stop_flag = (uint8_t *)flag;
+    while (!(*stop_flag)) {
+        sleep(1);
+        *stop_flag = !send_module_status(&status);
+    }
+    pthread_exit(NULL);
+}
+
 void *receiver_thread(void *flag) {
     uint8_t *stop_flag = (uint8_t *)flag;
     while(!(*stop_flag)) {
         header hdr;
         if (recv(sockfd, &hdr, sizeof(hdr), 0) &&
             hdr.checkSum == get_check_sum(&hdr)) {
+            time_response resp;
             switch (hdr.typePack) {
                 case 0x4:
                     time_response resp;
-                    if (recv(sockfd, &resp, hdr.sizeData, 0))
+                    if (recv(sockfd, &resp, sizeof(time_response), 0))
                         time_response_handler(&hdr, &resp);
                     break;
                 case 0x5A1:
@@ -109,7 +135,7 @@ void *receiver_thread(void *flag) {
                         mismatch_cmd_handler(&hdr, &mismatch_msg);
                     break;
                 default:
-                    uint32_t *buf = malloc(hdr.sizeData);
+                    uint32_t *buf = (uint32_t *)malloc(hdr.sizeData);
                     if (recv(sockfd, buf, hdr.sizeData, 0))
                         unknown_message_handler(&hdr, buf);
                     free(buf);
@@ -125,7 +151,7 @@ int send_time_request() {
     hdr.sizeData = 8;
     hdr.typePack = 0x3;
     time_request request;
-    *(uint64_t *)&request = time(NULL);
+    *(uint64_t *)&request = mstime();
     struct iovec msg_iov[2] = {{.iov_base = &hdr, .iov_len = 16},
         {.iov_base = &request, .iov_len = hdr.sizeData}};
     struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
@@ -139,15 +165,16 @@ void voi_stop_listen() {
 void wait_lost_connection() {
     pthread_join(ping_id, NULL);
     pthread_join(receiver_id, NULL);
+    pthread_join(status_id, NULL);
     pthread_mutex_destroy(&send_mutex);
 }
 
 int voi_register(char *ipv6_address, int port, reg_request *req) {
-    if ((sockfd = socket(AF_INET6, SOCK_STREAM, 0)) != -1) {
-        struct sockaddr_in6 addr = {0};
-        if (inet_pton(AF_INET6, ipv6_address, &(addr.sin6_addr)) == 1) {
-            addr.sin6_family = AF_INET6;
-            addr.sin6_port = htons(port);
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) != -1) {
+        struct sockaddr_in addr = {0};
+        if (inet_pton(AF_INET, ipv6_address, &(addr.sin_addr)) == 1) {
+            addr.sin_family = AF_INET;
+            addr.sin_port = htons(port);
             if (!connect(sockfd, (struct sockaddr *)&addr, sizeof(addr))) {
                 common_header.idxModule = 0xFF;
                 common_header.typePack = 0x1;
@@ -173,7 +200,7 @@ int voi_register(char *ipv6_address, int port, reg_request *req) {
 
 int send_voi_message(struct msghdr *msg) {
     int out = 0;
-    header *hdr = msg->msg_iov[0].iov_base;
+    header *hdr = (header *)msg->msg_iov[0].iov_base;
     pthread_mutex_lock(&send_mutex);
         hdr->idxPack = common_header.idxPack;
         hdr->checkSum = get_check_sum(hdr);
@@ -208,8 +235,17 @@ void set_header_info(uint32_t sender, uint8_t yMajor,
     common_header.isAsku = isAsku;
 }
 
+void set_module_status(module_status st) {
+    status = st;
+}
+
 header get_common_header() {
     return common_header;
+}
+
+uint64_t mstime() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 void ignore_message(header *hdr, void *pack) { (void)hdr; (void)pack; }

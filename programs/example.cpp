@@ -5,22 +5,23 @@
 #include <signal.h>
 #include <errno.h>
 
-#define ADDRESS "::"
+#define ADDRESS "192.168.0.12"
 #define PORT 17001
 #define MODULE_ID 0x424c41
 #define MANUFACTURER_ID 0x1
 #define SERIAL_NUMBER 2345
 #define PROTOCOL_VERSION_MAJOR 2
 #define PROTOCOL_VERSION_MINOR 3
-#define FREQ 10
+#define FREQ 2
 
 static GetSock s("127.0.0.1", 14552, "127.0.0.1", 14553);
 static Packet coord_pack = {0};
 static bla_state state = {.serial = 12345, .typeBLA = 1,
                        .typeBCH = 2, .stateBLA = 1,
                        .stateBCH = 1, .FreqLinkHz = 10,
-                       .SNR_dB = 100, .typeCoordCeil = 0,
-                       .typeCoordBLA = 0, .typeSpeed = 1};
+                       .SNR_dB = 100, .typeCoordCeil = 1,
+                       .typeCoordBLA = 1, .typeSpeed = 2};
+static module_status status = {.status = 1, .work = 1, .isImit = 1};
 
 void unexpected_message_callback(header *hdr, void *pack) {
     (void)pack;
@@ -66,6 +67,7 @@ int main() {
     new_timer.it_interval.tv_usec = 1000000 / FREQ;
 
     set_header_info(MODULE_ID, PROTOCOL_VERSION_MAJOR, PROTOCOL_VERSION_MINOR, 0);
+    set_module_status(status);
     reg_request request = {.idManuf = MANUFACTURER_ID, .serialNum = SERIAL_NUMBER,
                             .versHardMaj = 1, .versHardMin = 0,
                             .versProgMaj = 1, .isInfo = 0,
@@ -73,11 +75,13 @@ int main() {
     bla_abil abil = {.serial = 12345, .maxRange = 1,
                      .maxV = 20, .maxHeight = 50,
                      .isGround = 0, .isAerial = 1};
+    set_ext_control_cmd_callback((void (*)(header *, ext_control_cmd *))unexpected_message_callback);
+    set_control_cmd_callback((void (*)(header *, control_cmd *))unexpected_message_callback);
     set_coord_cor_cmd_callback((void (*)(header *, coord_cor_cmd *))unexpected_message_callback);
     set_mismatch_cmd_callback((void (*)(header *, mismatch_cmd *))unexpected_message_callback);
     set_unknown_message_handler((void (*)(header *, uint32_t *))unexpected_message_callback);
     set_ext_control_cmd_callback(ext_control_command_callback);
-    if (voi_register(ADDRESS, PORT, &request)) {
+    if (voi_register((char *)ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
     } else {
         send_nsu_abilities(1, &abil);

@@ -3,6 +3,22 @@
 
 #include <stdint.h>
 
+struct module_status {
+    uint32_t time1;
+    uint32_t time2;
+    uint32_t status : 3;
+    uint32_t work : 3;
+    uint32_t isRGDV : 1;
+    uint32_t isRAF : 1;
+    uint32_t isLocal : 1;
+    uint32_t isImit : 1;
+    uint32_t hasTP : 1;
+    uint32_t isTP : 1;
+    uint32_t reserved1 : 4;
+    uint32_t mode : 16;
+    uint32_t reserved2;
+};
+
 typedef struct {
     uint32_t sender : 24;
     uint32_t idxModule : 8;
@@ -36,12 +52,12 @@ typedef struct {
     uint32_t timeRequest2;
 } time_request;
 
-typedef struct {
+struct time_response{
     uint32_t timeRequest1;
     uint32_t timeRequest2;
     uint32_t timeAnswer1;
     uint32_t timeAnswer2;
-} time_response;
+};
 
 typedef struct {
     uint32_t serial;

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.0)
 project(proj_o4 VERSION 0.1.0)
 
 set(PROJ_4_SRC lib/get_data.cpp)
-set(ANTI-UAV_LINK_SRC lib/anti-uav_tcp_connector.c)
+set(ANTI-UAV_LINK_SRC lib/anti-uav_tcp_connector.cpp)
 
 include_directories(headers/)
 
