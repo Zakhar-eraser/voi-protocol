@@ -3,6 +3,14 @@
 
 #include <stdint.h>
 
+struct module_geopos {
+    uint32_t typeData : 3;
+    uint32_t isValid : 1;
+    float X_lat;
+    float Y_lon;
+    float Z_height;
+};
+
 struct module_status {
     uint32_t time1;
     uint32_t time2;

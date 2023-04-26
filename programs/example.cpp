@@ -8,7 +8,7 @@
 #define ADDRESS "192.168.0.12"
 #define PORT 17001
 #define MODULE_ID 0x424c41
-#define MANUFACTURER_ID 0x1
+#define MANUFACTURER_ID 0x1A
 #define SERIAL_NUMBER 2345
 #define PROTOCOL_VERSION_MAJOR 2
 #define PROTOCOL_VERSION_MINOR 3
@@ -21,7 +21,7 @@ static bla_state state = {.serial = 12345, .typeBLA = 1,
                        .stateBCH = 1, .FreqLinkHz = 10,
                        .SNR_dB = 100, .typeCoordCeil = 1,
                        .typeCoordBLA = 1, .typeSpeed = 2};
-static module_status status = {.status = 1, .work = 1, .isImit = 1};
+static module_status status = {.status = 1, .work = 1, .isRAF = 1, .isImit = 1};
 
 void unexpected_message_callback(header *hdr, void *pack) {
     (void)pack;
@@ -33,6 +33,8 @@ void ext_control_command_callback(header *hdr, ext_control_cmd *cmd) {
     coord_pack.gps.lat = cmd->latitudeDegCeil;
     coord_pack.gps.lon = cmd->longitudeDegCeil;
     coord_pack.gps.alt = cmd->heightCeil;
+    fprintf(stderr, "pack 0x%X captured\nX: %f\nY: %f\nZ: %f\ncommand: %i\n", hdr->idxPack,
+        cmd->latitudeDegCeil, cmd->longitudeDegCeil, cmd->heightCeil, cmd->cmdBLA);
     s.updateMessaging(coord_pack);
 }
 
@@ -54,7 +56,16 @@ void close_connection(int signum) {
 }
 
 int main() {
-    coord_pack.gps.command = 1;
+    FILE *file = fopen("../json/scheme.json", "rb");
+    fseek(file, 0, SEEK_END);
+    unsigned long size = ftell(file) + 1;
+    fseek(file, 0, SEEK_SET);
+    uint8_t *json = (uint8_t *)malloc(size);
+    fread(json, size - 1, 1, file);
+    fclose(file);
+    json[size-1] = 0;
+
+    coord_pack.gps.command = 0;
     coord_pack.gps.lat =11;
     coord_pack.gps.lon = 5;
     coord_pack.gps.alt = 12;
@@ -72,9 +83,10 @@ int main() {
                             .versHardMaj = 1, .versHardMin = 0,
                             .versProgMaj = 1, .isInfo = 0,
                             .versProgMin = 0 ,.isAsku = 0};
-    bla_abil abil = {.serial = 12345, .maxRange = 1,
-                     .maxV = 20, .maxHeight = 50,
+    bla_abil abil = {.serial = 12345, .maxRange = 100,
+                     .maxV = 20, .maxHeight = 100,
                      .isGround = 0, .isAerial = 1};
+    module_geopos geopos = {.typeData = 2, .isValid = 1};
     set_ext_control_cmd_callback((void (*)(header *, ext_control_cmd *))unexpected_message_callback);
     set_control_cmd_callback((void (*)(header *, control_cmd *))unexpected_message_callback);
     set_coord_cor_cmd_callback((void (*)(header *, coord_cor_cmd *))unexpected_message_callback);
@@ -84,6 +96,8 @@ int main() {
     if (voi_register((char *)ADDRESS, PORT, &request)) {
         printf("Error %i", errno);
     } else {
+        send_module_scheme(json, size);
+        send_module_geopos(&geopos);
         send_nsu_abilities(1, &abil);
         voi_start_listen();
         setitimer(ITIMER_REAL, &new_timer, &old_timer);
@@ -91,5 +105,6 @@ int main() {
         wait_lost_connection();
     }
     close_voi_connection();
+    free(json);
     return errno;
 }

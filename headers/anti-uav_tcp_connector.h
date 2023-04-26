@@ -16,6 +16,8 @@ int send_nsu_abilities(uint8_t maxNumBLA, bla_abil *abil);
 int voi_register(char *ipv6_address, int port, reg_request *req);
 int send_bla_state(bla_state *state);
 int send_module_status(module_status *status);
+int send_module_geopos(module_geopos *geopos);
+int send_module_scheme(uint8_t *json, unsigned long size);
 
 void voi_start_listen();
 void voi_stop_listen();

@@ -1,0 +1,24 @@
+[
+    { "IDElem" : 0,
+      "Name" : "Анти-БЛА",
+      "ShortName" : "ТПВ",
+      "Params" : [	{ "IDParam" : 0, "Name" : "Статус", "Type" : 2, "Template" : [
+                    {"Value" : 0, "Text": "включение оборудования"},
+                     {"Value" : 1, "Text": "инициализация параметров"},
+                    {"Value" : 2, "Text": "готов к работе"}
+                    ]
+     } ],
+      "ConfigParam" : [ { "NameConfig" : "Отображение дополнительных данных на видео",
+                         "IDConfigParam" : 0, "TypeConfig" : 1, "IsSave" : true, "Values" : ["вкл.", "выкл."]
+                       },
+                       { "NameConfig" : "Обработка",
+                         "ConfigParam" : [{ "NameConfig" : "Классификация целей",
+                             "IDConfigParam" : 1, "TypeConfig" : 1, "IsSave" : false, 
+                             "Values" : ["вкл.", "выкл."]
+                            },
+                            {"NameConfig" : "Максимальная скорость цели",
+                             "IDConfigParam" : 2, "TypeConfig" : 2, "IsSave" : true,
+                             "RangeMin" : 0.0, "RangeMax" : 100, "Units" : "м/с"
+                            }] 
+                       }]
+    }]

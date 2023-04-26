@@ -41,6 +41,26 @@ static pthread_t ping_id, status_id, receiver_id;
 static uint8_t stop;
 static pthread_mutex_t send_mutex;
 
+int send_module_scheme(uint8_t *json, unsigned long s) {
+    header hdr = common_header;
+    hdr.typePack = 0x20;
+    hdr.sizeData = s;
+    struct iovec msg_iov[2] = {{.iov_base = &hdr, .iov_len = sizeof(header)},
+    {.iov_base = json, .iov_len = s}};
+    struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
+    return send_voi_message(&msg);
+}
+
+int send_module_geopos(module_geopos *geopos) {
+    header hdr = common_header;
+    hdr.typePack = 0x5;
+    hdr.sizeData = sizeof(module_geopos);
+    struct iovec msg_iov[2] = {{.iov_base = &hdr, .iov_len = sizeof(header)},
+    {.iov_base = geopos, .iov_len = sizeof(module_geopos)}};
+    struct msghdr msg = {.msg_iov = msg_iov, .msg_iovlen = 2};
+    return send_voi_message(&msg); 
+}
+
 int send_module_status(module_status *status) {
     header hdr = common_header;
     hdr.typePack = 0x24;
